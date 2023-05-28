@@ -9,10 +9,10 @@ import java.lang.reflect.Field;
 public class Config {
     private static final String FILE_NAME = "MobKillTracker3.json";
 
-    @SessionOnly
+    @SessionOnly // Mod enabled
     private boolean modEnabled = true;
 
-    @SessionOnly
+    @SessionOnly // Logging, unused
     private boolean logging = false;
 
     public boolean isModEnabled() {

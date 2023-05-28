@@ -1,7 +1,10 @@
 package com.spiritlight.mobkilltracker.v3.utils;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.spiritlight.mobkilltracker.v3.annotations.Synchronized;
+import com.spiritlight.mobkilltracker.v3.enums.Tier;
 
 import java.util.Objects;
 
@@ -44,14 +47,16 @@ public class DropStatistics {
         this.note = that.note;
     }
 
-    public static final int ITEM = 0, INGREDIENT = 1;
+    public static final int ITEM = 0, INGREDIENT = 1, ALL = 2;
     public int getQuantity(int type) {
         return type == ITEM ?
                 // item total
                 mythic + fabled + legendary + rare + set + unique + normal :
                 type == INGREDIENT ?
                 // ingredient total
-                ingredient3 + ingredient2 + ingredient1 + ingredient0 : 0;
+                ingredient3 + ingredient2 + ingredient1 + ingredient0 :
+                mythic + fabled + legendary + rare + set + unique+ normal +
+                ingredient3 + ingredient2 + ingredient1 + ingredient0;
     }
 
     /**
@@ -102,6 +107,10 @@ public class DropStatistics {
         object.addProperty("kills", kills);
         object.addProperty("note", note);
         return object.toString();
+    }
+
+    public JsonElement toJson() {
+        return JsonParser.parseString(this.toString());
     }
 
     @Synchronized
@@ -160,6 +169,23 @@ public class DropStatistics {
         }
     }
 
+    @Synchronized
+    public void addTier(Tier tier) {
+        synchronized (lock) {
+            switch (tier) {
+                case THREE:
+                    ingredient3++; break;
+                case TWO:
+                    ingredient2++; break;
+                case ONE:
+                    ingredient1++; break;
+                case ZERO:
+                    ingredient0++; break;
+                case UNKNOWN:
+            }
+        }
+    }
+
     public int getKills() {
         return kills;
     }
@@ -170,6 +196,10 @@ public class DropStatistics {
 
     public String getNote() {
         return note;
+    }
+
+    public boolean hasNote() {
+        return note != null && !note.isEmpty();
     }
 
     public void setNote(String note) {
