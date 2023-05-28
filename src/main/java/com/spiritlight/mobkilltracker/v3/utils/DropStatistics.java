@@ -1,8 +1,8 @@
 package com.spiritlight.mobkilltracker.v3.utils;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.spiritlight.mobkilltracker.v3.annotations.Synchronized;
 import com.spiritlight.mobkilltracker.v3.enums.Tier;
 
@@ -110,7 +110,7 @@ public class DropStatistics {
     }
 
     public JsonElement toJson() {
-        return JsonParser.parseString(this.toString());
+        return new Gson().fromJson(this.toString(), JsonObject.class);
     }
 
     @Synchronized

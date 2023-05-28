@@ -3,7 +3,6 @@ package com.spiritlight.mobkilltracker.v3;
 import com.spiritlight.mobkilltracker.v3.command.MKTCommand;
 import com.spiritlight.mobkilltracker.v3.command.MKTDebugCommand;
 import com.spiritlight.mobkilltracker.v3.config.Config;
-import com.spiritlight.mobkilltracker.v3.core.EntityEventHandler;
 import com.spiritlight.mobkilltracker.v3.utils.DropManager;
 import com.spiritlight.mobkilltracker.v3.utils.ItemDatabase;
 import net.minecraftforge.client.ClientCommandHandler;
@@ -13,7 +12,6 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

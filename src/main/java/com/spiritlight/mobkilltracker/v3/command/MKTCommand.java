@@ -42,7 +42,7 @@ public class MKTCommand extends CommandBase implements IClientCommand {
     }
 
     @Override
-    public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+    public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         if(args.length == 0) {
             help(); return;
         }
@@ -254,7 +254,6 @@ public class MKTCommand extends CommandBase implements IClientCommand {
                 break;
             default:
                 help();
-                return;
         }
     }
 

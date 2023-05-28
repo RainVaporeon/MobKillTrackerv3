@@ -34,8 +34,8 @@ public class DropManager {
         return sessionData.get(index);
     }
 
-    public DropStatistics remove(int index) {
-        return sessionData.remove(index);
+    public void remove(int index) {
+        sessionData.remove(index);
     }
 
     public List<DropStatistics> getBackingList() {

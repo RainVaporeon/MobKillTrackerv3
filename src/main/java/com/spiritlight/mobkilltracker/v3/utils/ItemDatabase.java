@@ -1,8 +1,8 @@
 package com.spiritlight.mobkilltracker.v3.utils;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.spiritlight.mobkilltracker.v3.enums.Rarity;
 import com.spiritlight.mobkilltracker.v3.enums.Tier;
 
@@ -36,7 +36,7 @@ public class ItemDatabase {
         itemMap.clear();
         ingredientMap.clear();
         try {
-            JsonElement items = JsonParser.parseString(Request.get("https://api.wynncraft.com/public_api.php?action=itemDB&category=all"));
+            JsonElement items = new Gson().fromJson(Request.get("https://api.wynncraft.com/public_api.php?action=itemDB&category=all"), JsonElement.class);
             JsonArray arr = items.getAsJsonObject().getAsJsonArray("items");
             for (JsonElement element : arr) {
                 String rarity = element.getAsJsonObject().get("tier").getAsString();
@@ -72,7 +72,7 @@ public class ItemDatabase {
                 itemMap.put(element.getAsJsonObject().get("name").getAsString(), itemRarity);
             }
             for(int i=0; i<4; i++) {
-                JsonElement ingredients = JsonParser.parseString(Request.get("https://api.wynncraft.com/v2/ingredient/search/tier/" + i));
+                JsonElement ingredients = new Gson().fromJson(Request.get("https://api.wynncraft.com/v2/ingredient/search/tier/" + i), JsonElement.class);
                 for (JsonElement element : ingredients.getAsJsonObject().getAsJsonArray("data")) {
                     Tier tier = (i == 0 ? Tier.ZERO : i == 1 ? Tier.ONE : i == 2 ? Tier.TWO : Tier.THREE);
                     ingredientMap.put(element.getAsJsonObject().get("name").getAsString(), tier);
