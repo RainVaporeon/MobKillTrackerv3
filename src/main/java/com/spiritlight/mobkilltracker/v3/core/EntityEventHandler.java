@@ -48,18 +48,22 @@ public class EntityEventHandler {
     public void analyzeEntities(TickEvent.WorldTickEvent event) {
         for(Entity entity : queuedEntities) {
             if(storedEntities.contains(entity)) {
+                // We can already assume that this is processed, so skip
                 queuedEntities.remove(entity);
                 continue;
             }
             if (entity instanceof EntityItem) {
                 EntityItem entityItem = (EntityItem) entity;
                 // Ignoring emerald for sake of our life
-                if(Items.EMERALD.equals(entityItem.getItem().getItem())) return;
+                if(Items.EMERALD.equals(entityItem.getItem().getItem())) {
+                    exclusion(entity); continue;
+                }
                 String itemName = entityItem.getItem().getDisplayName();
                 Rarity rarity = ItemDatabase.instance.getItemRarity(itemName);
                 if(rarity != null) {
                     manageRarity(rarity);
-                    return;
+                    exclusion(entity);
+                    continue;
                 }
 
                 // This line is only reached if no item was fetched
@@ -69,11 +73,22 @@ public class EntityEventHandler {
                 // Process entities here
                 if(entity.getName().toLowerCase(Locale.ROOT).contains("combat xp")) {
                     stats.addKill();
+                    exclusion(entity);
                 }
             }
-            storedEntities.add(entity);
-            queuedEntities.remove(entity);
+
         }
+    }
+
+    /**
+     * Adds this entity to stored entities and remove it from
+     * the queue. This is ideally called after all processing
+     * has been done and is OK to discard it.
+     * @param entity The entity to add
+     */
+    private void exclusion(Entity entity) {
+        storedEntities.add(entity);
+        queuedEntities.remove(entity);
     }
 
     private void manageRarity(Rarity rarity) {
