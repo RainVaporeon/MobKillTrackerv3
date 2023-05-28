@@ -38,7 +38,6 @@ public class EntityEventHandler {
     @SubscribeEvent
     public void onEntityUpdate(EntityEvent.EntityConstructing event) {
         final Entity entity = event.getEntity();
-        if(!validAge(entity)) return; // At least 1 tick of living
         if(storedEntities.contains(entity)) return;
         // Processing items in this tab
         executor.schedule(() -> queuedEntities.add(entity), 100, TimeUnit.MILLISECONDS);
@@ -75,10 +74,6 @@ public class EntityEventHandler {
             storedEntities.add(entity);
             queuedEntities.remove(entity);
         }
-    }
-
-    private boolean validAge(Entity entity) {
-        return entity.ticksExisted >= 1;
     }
 
     private void manageRarity(Rarity rarity) {
