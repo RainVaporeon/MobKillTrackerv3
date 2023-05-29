@@ -13,6 +13,9 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.util.text.event.HoverEvent;
 import net.minecraftforge.client.IClientCommand;
 import net.minecraftforge.common.MinecraftForge;
@@ -98,8 +101,11 @@ public class MKTDebugCommand extends CommandBase implements IClientCommand {
                 List<Entity> loadedEntities = Minecraft.getMinecraft().world.getLoadedEntityList();
                 for(Entity e : loadedEntities) {
                     try {
-                        ITextComponent itc = Message.builder("Entity " + e.getName() + ":")
-                                .addHoverEvent(HoverEvent.Action.SHOW_TEXT, Message.of(Message.formatJson(String.valueOf(e.serializeNBT())))).build();
+                        ITextComponent itc = Message.builder("Entity " + e.getName() + ":").build()
+                                        .setStyle(new Style().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                                new TextComponentString(Message.formatJson("Wynncraft Item Name:" + e.serializeNBT().getCompoundTag("Item").getCompoundTag("tag").getCompoundTag("display").getString("Name") + "\n\n" + "Item name: " + (e.hasCustomName() ? e.getCustomNameTag() + "(" + e.getName() + ")" : e.getName()) + "\n" + "Item UUID: " + e.getUniqueID() + "\n\n" + e.serializeNBT() + "\n\nClick to track!")))
+                                        ).setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/compass " +
+                                                e.getPosition().getX() + " " + e.getPosition().getY() + " " + e.getPosition().getZ())));
                         Message.sendRaw(itc);
                         System.out.println(e.getName() + "#" + e.serializeNBT());
                     } catch (Exception ex) {

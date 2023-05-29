@@ -182,6 +182,7 @@ public class DropStatistics {
                 case ZERO:
                     ingredient0++; break;
                 case UNKNOWN:
+                    System.out.println("Found unknown rarity");
             }
         }
     }

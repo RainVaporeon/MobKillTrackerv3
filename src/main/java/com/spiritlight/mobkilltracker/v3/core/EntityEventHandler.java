@@ -12,6 +12,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Items;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.util.text.event.HoverEvent;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -22,6 +25,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class EntityEventHandler {
     private final DropStatistics stats = new DropStatistics();
@@ -42,8 +46,6 @@ public class EntityEventHandler {
 
     private final Set<Entity> storedEntities = new LinkedHashSet<>();
 
-    private final Set<Entity> queuedEntities = new CopyOnWriteArraySet<>();
-
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     @SubscribeEvent
     public void onEntityUpdate(EntityEvent.EntityConstructing event) {
@@ -54,78 +56,44 @@ public class EntityEventHandler {
             Message.debug("Found entity " + entity.getName());
         }
         if(Minecraft.getMinecraft().world == null) return;
-        // Less efficient but this theoretically should work!
-        List<Entity> el = Minecraft.getMinecraft().world.getEntities(Entity.class, this::qualifier);
-        queuedEntities.addAll(el);
-        // The more favored method, but does not work now on Wynncraft
-        // executor.schedule(() -> queuedEntities.add(entity), Main.configuration.getDelayMills(), TimeUnit.MILLISECONDS);
+
+        executor.schedule(() -> processEntity(entity), Main.configuration.getDelayMills(), TimeUnit.MILLISECONDS);
     }
 
-    private boolean qualifier(Entity entity) {
-        return !storedEntities.contains(entity) && !queuedEntities.contains(entity);
-    }
+    private void processEntity(Entity entity) {
+        storedEntities.add(entity);
+        if (entity instanceof EntityItem) {
+            EntityItem entityItem = (EntityItem) entity;
+            // Ignoring emerald for sake of our life
+            if(Items.EMERALD.equals(entityItem.getItem().getItem())) return;
 
-    // Somewhat preferred method rather than scanning literally everything
-    @SubscribeEvent
-    public void analyzeEntities(TickEvent.WorldTickEvent event) {
-        for(Entity entity : queuedEntities) {
-            if(storedEntities.contains(entity)) {
-                // We can already assume that this is processed, so skip
-                queuedEntities.remove(entity);
-                continue;
+            String itemName = entityItem.serializeNBT().getCompoundTag("Item").getCompoundTag("tag").getCompoundTag("display").getString("Name");
+            Rarity rarity = ItemDatabase.instance.getItemRarity(itemName);
+            if(Main.configuration.isLogging() || Main.configuration.doLogValid()) {
+                ITextComponent itc = Message.builder("Processing item entity " + entity.getName()).build()
+                        .setStyle(new Style().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                new TextComponentString(Message.formatJson("Wynncraft Item Name:" + entity.serializeNBT().getCompoundTag("Item").getCompoundTag("tag").getCompoundTag("display").getString("Name") + "\n\n" + "Item name: " + (entity.hasCustomName() ? entity.getCustomNameTag() + "(" + entity.getName() + ")" : entity.getName()) + "\n" + "Item UUID: " + entity.getUniqueID() + "\n\n" + entity.serializeNBT() + "\n\nClick to track!")))
+                        ).setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/compass " +
+                                entity.getPosition().getX() + " " + entity.getPosition().getY() + " " + entity.getPosition().getZ())));
+                Message.sendRaw(itc);
             }
-            if(Main.configuration.isLogging()) {
-                ITextComponent component = Message.builder(Color.MAGENTA + "Processing queued entity " + entity.getName()).addHoverEvent(HoverEvent.Action.SHOW_TEXT,
-                        Message.of(Message.formatJson(String.valueOf(entity.serializeNBT())))).build();
-                Message.sendRaw(component);
-            }
-            exclusion(entity);
-            if (entity instanceof EntityItem) {
-                EntityItem entityItem = (EntityItem) entity;
-                // Ignoring emerald for sake of our life
-                if(Items.EMERALD.equals(entityItem.getItem().getItem())) continue;
-
-                String itemName = entityItem.getItem().getDisplayName();
-                Rarity rarity = ItemDatabase.instance.getItemRarity(itemName);
-                if(Main.configuration.doLogValid()) {
-                    ITextComponent component = Message.builder(Color.MAGENTA + "Processing queued item " + entity.getName()).addHoverEvent(HoverEvent.Action.SHOW_TEXT,
-                            Message.of(Message.formatJson(String.valueOf(entity.serializeNBT())))).build();
-                    Message.sendRaw(component);
-                }
-                if(rarity != null) {
-                    manageRarity(rarity);
-                    continue;
-                }
-
+            if(rarity != Rarity.UNKNOWN) {
+                manageRarity(rarity);
+            } else {
                 // This line is only reached if no item was fetched
                 Tier tier = ItemDatabase.instance.getIngredientTier(itemName);
                 stats.addTier(tier);
-            } else {
-                // Process entities here
-                if(entity.getName().toLowerCase(Locale.ROOT).contains("combat xp")) {
-                    if(Main.configuration.doLogValid()) {
-                        ITextComponent component = Message.builder(Color.MAGENTA + "Processing kill " + entity.getName()).addHoverEvent(HoverEvent.Action.SHOW_TEXT,
-                                Message.of(Message.formatJson(String.valueOf(entity.serializeNBT())))).build();
-                        Message.sendRaw(component);
-                    }
-                    stats.addKill();
-                }
             }
-        }
-    }
-
-    /**
-     * Adds this entity to stored entities and remove it from
-     * the queue. This is ideally called after all processing
-     * has been done and is OK to discard it.
-     * @param entity The entity to add
-     */
-    private void exclusion(Entity entity) {
-        storedEntities.add(entity);
-        queuedEntities.remove(entity);
-        if(Main.configuration.isLogging()) {
-            Message.debug("Modified exclusion set. storedEntities=" + storedEntities.size() + "," +
-                    "queuedEntities=" + queuedEntities.size());
+        } else {
+            // Process entities here
+            if(entity.getName().toLowerCase(Locale.ROOT).contains("combat xp")) {
+                if(Main.configuration.doLogValid()) {
+                    ITextComponent component = Message.builder(Color.MAGENTA + "Processing kill " + entity.getName()).addHoverEvent(HoverEvent.Action.SHOW_TEXT,
+                            Message.of(Message.formatJson(String.valueOf(entity.serializeNBT())))).build();
+                    Message.sendRaw(component);
+                }
+                stats.addKill();
+            }
         }
     }
 
