@@ -25,7 +25,7 @@ public class EventHandler {
 
     @SubscribeEvent
     public void onTotemPlacement(TotemEvent event) {
-        if(Main.configuration.isLogging()) {
+        if(Main.configuration.isLogging() || Main.configuration.doLogValid()) {
             Message.debug("Caught TotemEvent");
         }
         if(DataHandler.isInProgress()) {
@@ -49,7 +49,7 @@ public class EventHandler {
     @SubscribeEvent
     public void onCompletion(CompletionEvent event) {
         if(Minecraft.getMinecraft().player == null) return;
-        if(Main.configuration.isLogging()) {
+        if(Main.configuration.isLogging() || Main.configuration.doLogValid()) {
             Message.debug("Caught CompletionEvent");
         }
         DropStatistics drops = event.getHandler().getStats();
@@ -86,7 +86,7 @@ public class EventHandler {
     /* Logging Only */
     @SubscribeEvent
     public void termination(TerminationEvent event) {
-        if(Main.configuration.isLogging()) {
+        if(Main.configuration.isLogging() || Main.configuration.doLogValid()) {
             Message.debug("Caught TerminationEvent");
         }
     }

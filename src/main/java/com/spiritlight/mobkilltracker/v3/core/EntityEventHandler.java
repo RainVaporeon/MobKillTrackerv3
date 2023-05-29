@@ -28,7 +28,7 @@ public class EntityEventHandler {
 
 
     public EntityEventHandler() {
-        if(Main.configuration.isLogging()) {
+        if(Main.configuration.isLogging() || Main.configuration.doLogValid()) {
             Message.debug("Constructing EntityEventHandler");
         }
         // Preventing duplications
@@ -53,7 +53,16 @@ public class EntityEventHandler {
         if(Main.configuration.isLogging()) {
             Message.debug("Found entity " + entity.getName());
         }
-        executor.schedule(() -> queuedEntities.add(entity), Main.configuration.getDelayMills(), TimeUnit.MILLISECONDS);
+        if(Minecraft.getMinecraft().world == null) return;
+        // Less efficient but this theoretically should work!
+        List<Entity> el = Minecraft.getMinecraft().world.getEntities(Entity.class, this::qualifier);
+        queuedEntities.addAll(el);
+        // The more favored method, but does not work now on Wynncraft
+        // executor.schedule(() -> queuedEntities.add(entity), Main.configuration.getDelayMills(), TimeUnit.MILLISECONDS);
+    }
+
+    private boolean qualifier(Entity entity) {
+        return !storedEntities.contains(entity) && !queuedEntities.contains(entity);
     }
 
     // Somewhat preferred method rather than scanning literally everything

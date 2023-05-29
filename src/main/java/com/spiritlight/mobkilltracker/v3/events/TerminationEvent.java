@@ -10,7 +10,7 @@ public class TerminationEvent extends Event {
     private final Type type;
 
     public TerminationEvent(DataHandler terminate, Type type) {
-        if(Main.configuration.isLogging()) {
+        if(Main.configuration.isLogging() || Main.configuration.doLogValid()) {
             Message.debug("Constructing TerminationEvent for DataHandler " + terminate + " and type " + type);
         }
         this.handler = terminate;

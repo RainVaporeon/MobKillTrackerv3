@@ -33,7 +33,7 @@ public class DataHandler {
     }
 
     public void start(int duration) {
-        if(Main.configuration.isLogging()) {
+        if(Main.configuration.isLogging() || Main.configuration.doLogValid()) {
             Message.debug("DataHandler started with set duration " + duration);
         }
         inProgress = true;
