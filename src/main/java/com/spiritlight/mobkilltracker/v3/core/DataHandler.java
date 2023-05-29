@@ -1,8 +1,10 @@
 package com.spiritlight.mobkilltracker.v3.core;
 
+import com.spiritlight.mobkilltracker.v3.Main;
 import com.spiritlight.mobkilltracker.v3.events.CompletionEvent;
 import com.spiritlight.mobkilltracker.v3.events.TerminationEvent;
 import com.spiritlight.mobkilltracker.v3.utils.DropStatistics;
+import com.spiritlight.mobkilltracker.v3.utils.Message;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
@@ -31,6 +33,9 @@ public class DataHandler {
     }
 
     public void start(int duration) {
+        if(Main.configuration.isLogging()) {
+            Message.debug("DataHandler started with set duration " + duration);
+        }
         inProgress = true;
         MinecraftForge.EVENT_BUS.register(handler);
         scheduler.schedule(this::stop, duration, TimeUnit.SECONDS);
@@ -89,6 +94,9 @@ public class DataHandler {
     }
 
     protected void completion() {
+        if(Main.configuration.isLogging()) {
+            Message.debug("DataHandler logging finished: " + this);
+        }
         MinecraftForge.EVENT_BUS.unregister(handler);
         this.scheduler.shutdownNow();
         inProgress = false;

@@ -62,6 +62,9 @@ public class DropManager {
             Message.error("This name already exists, please choose another name!");
             return;
         }
+        File folder = new File("mkt_out/");
+        if(!folder.exists()) folder.mkdirs();
+
         try(FileWriter writer = new FileWriter("mkt_out/" +name)) {
             JsonArray array = new JsonArray();
             for(DropStatistics stat : stats) {
@@ -76,6 +79,10 @@ public class DropManager {
     }
 
     public static void exportAllDrops() {
+        if(DropManager.instance.sessionData.isEmpty()) {
+            System.out.println("No drops available to save, aborting!");
+            return;
+        }
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-hh_mm_ss");
             String name = sdf.format(new Date());

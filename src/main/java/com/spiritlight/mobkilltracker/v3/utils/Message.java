@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.util.text.event.HoverEvent;
 
@@ -25,6 +26,10 @@ public class Message {
 
     public static void fatal(String s) {
         send(s, Color.DARK_RED);
+    }
+
+    public static void debug(String s) {
+        send(s, Color.MAGENTA);
     }
 
     public static void send(String s) {
@@ -49,6 +54,18 @@ public class Message {
         send0(component);
     }
 
+    public static String formatJson(String s) {
+        return s
+                .replace("{", TextFormatting.AQUA + "{" + TextFormatting.GOLD)
+                .replace("}", TextFormatting.AQUA + "}" + TextFormatting.GOLD)
+                .replace("[", TextFormatting.RESET + "[" + TextFormatting.GOLD)
+                .replace("]", TextFormatting.RESET + "]" + TextFormatting.GOLD)
+                .replace(",", TextFormatting.RESET + "," + TextFormatting.GOLD)
+                .replace(":", TextFormatting.RESET + ":" + TextFormatting.AQUA)
+                .replace("'", TextFormatting.YELLOW + "'" + TextFormatting.RESET)
+                .replace("\"", TextFormatting.GREEN + "\"" + TextFormatting.GOLD);
+    }
+
     private static void send0(ITextComponent content) {
         if(Minecraft.getMinecraft().player == null) return;
         Minecraft.getMinecraft().player.sendMessage(content);
@@ -56,6 +73,10 @@ public class Message {
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    public static Builder builder(String s) {
+        return new Builder(s);
     }
 
     public static ITextComponent of(String content) {

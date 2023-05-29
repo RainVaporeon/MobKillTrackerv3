@@ -25,6 +25,9 @@ public class EventHandler {
 
     @SubscribeEvent
     public void onTotemPlacement(TotemEvent event) {
+        if(Main.configuration.isLogging()) {
+            Message.debug("Caught TotemEvent");
+        }
         if(DataHandler.isInProgress()) {
             Message.warn("A totem is already in progress, ignoring this one...");
             return; // Ignore
@@ -46,6 +49,9 @@ public class EventHandler {
     @SubscribeEvent
     public void onCompletion(CompletionEvent event) {
         if(Minecraft.getMinecraft().player == null) return;
+        if(Main.configuration.isLogging()) {
+            Message.debug("Caught CompletionEvent");
+        }
         DropStatistics drops = event.getHandler().getStats();
         int totalDrops = drops.getQuantity(DropStatistics.ALL);
         int itemDrops = drops.getQuantity(DropStatistics.ITEM);
@@ -75,5 +81,13 @@ public class EventHandler {
                                 "§rRarity Index: " + drops.getRarityIndex()
         );
 
+    }
+
+    /* Logging Only */
+    @SubscribeEvent
+    public void termination(TerminationEvent event) {
+        if(Main.configuration.isLogging()) {
+            Message.debug("Caught TerminationEvent");
+        }
     }
 }

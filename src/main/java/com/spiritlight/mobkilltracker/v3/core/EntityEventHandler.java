@@ -1,12 +1,18 @@
 package com.spiritlight.mobkilltracker.v3.core;
 
+import com.spiritlight.mobkilltracker.v3.Main;
+import com.spiritlight.mobkilltracker.v3.enums.Color;
 import com.spiritlight.mobkilltracker.v3.enums.Rarity;
 import com.spiritlight.mobkilltracker.v3.enums.Tier;
 import com.spiritlight.mobkilltracker.v3.utils.DropStatistics;
 import com.spiritlight.mobkilltracker.v3.utils.ItemDatabase;
+import com.spiritlight.mobkilltracker.v3.utils.Message;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Items;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.event.HoverEvent;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -22,7 +28,12 @@ public class EntityEventHandler {
 
 
     public EntityEventHandler() {
-
+        if(Main.configuration.isLogging()) {
+            Message.debug("Constructing EntityEventHandler");
+        }
+        // Preventing duplications
+        if(Minecraft.getMinecraft().world != null)
+            this.storedEntities.addAll(Minecraft.getMinecraft().world.getLoadedEntityList());
     }
 
     public DropStatistics getStats() {
@@ -39,7 +50,10 @@ public class EntityEventHandler {
         final Entity entity = event.getEntity();
         if(storedEntities.contains(entity)) return;
         // Processing items in this tab
-        executor.schedule(() -> queuedEntities.add(entity), 100, TimeUnit.MILLISECONDS);
+        if(Main.configuration.isLogging()) {
+            Message.debug("Found entity " + entity.getName());
+        }
+        executor.schedule(() -> queuedEntities.add(entity), Main.configuration.getDelayMills(), TimeUnit.MILLISECONDS);
     }
 
     // Somewhat preferred method rather than scanning literally everything
@@ -51,17 +65,26 @@ public class EntityEventHandler {
                 queuedEntities.remove(entity);
                 continue;
             }
+            if(Main.configuration.isLogging()) {
+                ITextComponent component = Message.builder(Color.MAGENTA + "Processing queued entity " + entity.getName()).addHoverEvent(HoverEvent.Action.SHOW_TEXT,
+                        Message.of(Message.formatJson(String.valueOf(entity.serializeNBT())))).build();
+                Message.sendRaw(component);
+            }
+            exclusion(entity);
             if (entity instanceof EntityItem) {
                 EntityItem entityItem = (EntityItem) entity;
                 // Ignoring emerald for sake of our life
-                if(Items.EMERALD.equals(entityItem.getItem().getItem())) {
-                    exclusion(entity); continue;
-                }
+                if(Items.EMERALD.equals(entityItem.getItem().getItem())) continue;
+
                 String itemName = entityItem.getItem().getDisplayName();
                 Rarity rarity = ItemDatabase.instance.getItemRarity(itemName);
+                if(Main.configuration.doLogValid()) {
+                    ITextComponent component = Message.builder(Color.MAGENTA + "Processing queued item " + entity.getName()).addHoverEvent(HoverEvent.Action.SHOW_TEXT,
+                            Message.of(Message.formatJson(String.valueOf(entity.serializeNBT())))).build();
+                    Message.sendRaw(component);
+                }
                 if(rarity != null) {
                     manageRarity(rarity);
-                    exclusion(entity);
                     continue;
                 }
 
@@ -71,11 +94,14 @@ public class EntityEventHandler {
             } else {
                 // Process entities here
                 if(entity.getName().toLowerCase(Locale.ROOT).contains("combat xp")) {
+                    if(Main.configuration.doLogValid()) {
+                        ITextComponent component = Message.builder(Color.MAGENTA + "Processing kill " + entity.getName()).addHoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                Message.of(Message.formatJson(String.valueOf(entity.serializeNBT())))).build();
+                        Message.sendRaw(component);
+                    }
                     stats.addKill();
-                    exclusion(entity);
                 }
             }
-
         }
     }
 
@@ -88,6 +114,10 @@ public class EntityEventHandler {
     private void exclusion(Entity entity) {
         storedEntities.add(entity);
         queuedEntities.remove(entity);
+        if(Main.configuration.isLogging()) {
+            Message.debug("Modified exclusion set. storedEntities=" + storedEntities.size() + "," +
+                    "queuedEntities=" + queuedEntities.size());
+        }
     }
 
     private void manageRarity(Rarity rarity) {

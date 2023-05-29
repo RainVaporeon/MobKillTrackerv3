@@ -1,6 +1,8 @@
 package com.spiritlight.mobkilltracker.v3.events;
 
+import com.spiritlight.mobkilltracker.v3.Main;
 import com.spiritlight.mobkilltracker.v3.core.DataHandler;
+import com.spiritlight.mobkilltracker.v3.utils.Message;
 import net.minecraftforge.fml.common.eventhandler.Event;
 
 public class TerminationEvent extends Event {
@@ -8,6 +10,9 @@ public class TerminationEvent extends Event {
     private final Type type;
 
     public TerminationEvent(DataHandler terminate, Type type) {
+        if(Main.configuration.isLogging()) {
+            Message.debug("Constructing TerminationEvent for DataHandler " + terminate + " and type " + type);
+        }
         this.handler = terminate;
         this.type = type;
     }
