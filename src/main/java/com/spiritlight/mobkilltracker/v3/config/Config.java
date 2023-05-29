@@ -1,8 +1,6 @@
 package com.spiritlight.mobkilltracker.v3.config;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.google.gson.stream.JsonWriter;
 import com.spiritlight.mobkilltracker.v3.utils.ConfigObject;
 
@@ -119,6 +117,10 @@ public class Config {
                 if(Modifier.isStatic(f.getModifiers())) continue;
                 String name = f.getName();
                 Class<?> type = f.getType();
+                if(!jsonObject.has(name)) {
+                    System.out.println("Cannot find property " + name + ", skipping");
+                    continue;
+                }
                 if(type == String.class) {
                     f.set(jsonObject.get(name).getAsString(), this);
                 } else if (type == boolean.class) {
@@ -132,7 +134,7 @@ public class Config {
                         ConfigObject<?> cfg = ((ConfigObject<?>) type.newInstance()).deserialize(jsonObject.get(name).getAsString());
                         f.set(cfg, this);
                     } catch (Exception e) {
-                        throw new JsonParseException("Cannot find suitable type for name " + name + " with type " + type);
+                        throw new JsonParseException("Cannot find suitable type for name " + name + " with type " + type, e);
                     }
                 } else {
                     System.out.println("Found ambiguous field " + name + " with type " + type);
