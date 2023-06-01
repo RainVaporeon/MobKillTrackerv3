@@ -8,7 +8,6 @@ import com.spiritlight.mobkilltracker.v3.utils.Message;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
-import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
@@ -21,6 +20,7 @@ import net.minecraftforge.client.IClientCommand;
 import net.minecraftforge.common.MinecraftForge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.NotActiveException;
 import java.util.List;
 import java.util.Locale;
 
@@ -44,7 +44,8 @@ public class MKTDebugCommand extends CommandBase implements IClientCommand {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         if(args.length == 0) {
-            Message.error("Invalid syntax. /mktd stop|start <duration>|refetch|delay <duration>|log|dump");
+            Message.error("Invalid syntax. /mktd stop|start <duration>|refetch|delay <duration>|log|logvalid|dump|tracklast|exportall" +
+                    "|dumpviewed");
             return;
         }
         switch(args[0].toLowerCase(Locale.ROOT)) {
@@ -76,12 +77,29 @@ public class MKTDebugCommand extends CommandBase implements IClientCommand {
                 Main.configuration.setLogging(!Main.configuration.isLogging());
                 Message.info(String.valueOf(Main.configuration.isLogging()));
                 return;
+            case "logv":
             case "logvalid":
                 Main.configuration.setLogValid(!Main.configuration.doLogValid());
                 Message.info(String.valueOf(Main.configuration.doLogValid()));
                 return;
+            case "tracklast":
+                Main.configuration.setTrackLast(!Main.configuration.doTrackLast());
+                Message.info(String.valueOf(Main.configuration.doTrackLast()));
+                DataHandler.invalidateLast();
+                return;
             case "exportall":
                 Main.export();
+                Message.info("OK");
+                return;
+            case "dumpviewed":
+                DataHandler handler;
+                try {
+                    handler = DataHandler.getLastHandler();
+                } catch (NotActiveException nae) {
+                    Message.warn("Not Active");
+                    return;
+                }
+                Message.send(handler.getHandler().getViewedEntities().toString());
                 Message.info("OK");
                 return;
             case "save":

@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.spiritlight.mobkilltracker.v3.enums.Rarity;
 import com.spiritlight.mobkilltracker.v3.enums.Tier;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,18 +16,12 @@ public class ItemDatabase {
     private final Map<String, Rarity> itemMap = new HashMap<>();
     private final Map<String, Tier> ingredientMap = new HashMap<>();
 
-    void putItem(String item, Rarity rarity) {
-        itemMap.put(item, rarity);
-    }
-
-    void putIngredient(String ingredient, Tier tier) {
-        ingredientMap.put(ingredient, tier);
-    }
-
+    @Nonnull
     public Rarity getItemRarity(String item) {
         return itemMap.getOrDefault(item, Rarity.UNKNOWN);
     }
 
+    @Nonnull
     public Tier getIngredientTier(String ingredient) {
         return ingredientMap.getOrDefault(ingredient, Tier.UNKNOWN);
     }

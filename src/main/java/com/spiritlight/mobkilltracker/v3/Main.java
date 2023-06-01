@@ -3,19 +3,17 @@ package com.spiritlight.mobkilltracker.v3;
 import com.spiritlight.mobkilltracker.v3.command.MKTCommand;
 import com.spiritlight.mobkilltracker.v3.command.MKTDebugCommand;
 import com.spiritlight.mobkilltracker.v3.config.Config;
-import com.spiritlight.mobkilltracker.v3.utils.DropManager;
+import com.spiritlight.mobkilltracker.v3.events.ExecutionEvent;
+import com.spiritlight.mobkilltracker.v3.utils.drops.DropManager;
 import com.spiritlight.mobkilltracker.v3.utils.ItemDatabase;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
-
-import java.io.IOException;
-import java.io.UncheckedIOException;
 
 @Mod(modid = Main.MODID, name = Main.NAME, version = Main.VERSION)
 public class Main {
@@ -51,7 +49,15 @@ public class Main {
 
     @EventHandler
     public void init(FMLInitializationEvent event) {
+        MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new com.spiritlight.mobkilltracker.v3.events.EventHandler());
+    }
+
+    @SubscribeEvent
+    public void execute(ExecutionEvent event) {
+        if(event.shouldExecute(this)) {
+            event.getAction().run();
+        }
     }
 
     public static void export() {

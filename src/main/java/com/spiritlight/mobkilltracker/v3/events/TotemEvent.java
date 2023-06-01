@@ -6,8 +6,6 @@ import net.minecraftforge.fml.common.eventhandler.Event;
 
 public class TotemEvent extends Event {
     public TotemEvent() {
-        if(Main.configuration.isLogging()) {
-            Message.debug("Constructing TotemEvent");
-        }
+        Message.debugv("Constructing TotemEvent");
     }
 }

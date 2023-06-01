@@ -1,16 +1,16 @@
-package com.spiritlight.mobkilltracker.v3.utils;
+package com.spiritlight.mobkilltracker.v3.utils.drops;
 
 import com.google.gson.JsonArray;
+import com.spiritlight.mobkilltracker.v3.utils.Message;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class DropManager {
     // We use LinkedList implementation here for ease of accessing last element
@@ -18,7 +18,7 @@ public class DropManager {
 
     public static final DropManager instance = new DropManager();
 
-    public void insert(DropStatistics stats) {
+    public void insert(@Nonnull DropStatistics stats) {
         this.sessionData.add(stats);
     }
 
@@ -38,10 +38,12 @@ public class DropManager {
         sessionData.remove(index);
     }
 
+    @Nonnull
     public List<DropStatistics> getBackingList() {
         return sessionData;
     }
 
+    @Nonnull
     public Iterator<DropStatistics> iterator() {
         return sessionData.iterator();
     }
@@ -50,12 +52,15 @@ public class DropManager {
         sessionData.clear();
     }
 
+    @Nullable
     public DropStatistics getLast() {
+        if(sessionData.isEmpty()) return null;
         return sessionData.getLast();
     }
 
     public static void exportDrops(String name, List<DropStatistics> stats) {
         Message.info("Exporting " + stats.size() + " stats...");
+        stats.removeIf(Objects::isNull);
         name = name.contains(".json") ? name : name + ".json";
         File file = new File(name);
         if(file.exists()) {
@@ -98,7 +103,8 @@ public class DropManager {
     }
 
     private static final DecimalFormat df = new DecimalFormat("0.00");
-    public static String dropToString(DropStatistics drops) {
+    public static String dropToString(@Nullable DropStatistics drops) {
+        if(drops == null) return "";
         int totalDrops = drops.getQuantity(DropStatistics.ALL);
         int itemDrops = drops.getQuantity(DropStatistics.ITEM);
         int ingDrops = drops.getQuantity(DropStatistics.INGREDIENT);

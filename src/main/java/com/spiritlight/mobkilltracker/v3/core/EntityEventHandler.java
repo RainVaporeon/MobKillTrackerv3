@@ -1,12 +1,14 @@
 package com.spiritlight.mobkilltracker.v3.core;
 
+import com.google.common.collect.ImmutableSet;
 import com.spiritlight.mobkilltracker.v3.Main;
 import com.spiritlight.mobkilltracker.v3.enums.Color;
 import com.spiritlight.mobkilltracker.v3.enums.Rarity;
 import com.spiritlight.mobkilltracker.v3.enums.Tier;
-import com.spiritlight.mobkilltracker.v3.utils.DropStatistics;
 import com.spiritlight.mobkilltracker.v3.utils.ItemDatabase;
 import com.spiritlight.mobkilltracker.v3.utils.Message;
+import com.spiritlight.mobkilltracker.v3.utils.drops.DropStatistics;
+import com.spiritlight.mobkilltracker.v3.utils.math.StrictMath;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
@@ -18,25 +20,26 @@ import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.util.text.event.HoverEvent;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+
+import static com.spiritlight.mobkilltracker.v3.utils.SharedConstants.TOSS_MAGIC;
 
 public class EntityEventHandler {
     private final DropStatistics stats = new DropStatistics();
 
 
     public EntityEventHandler() {
-        if(Main.configuration.isLogging() || Main.configuration.doLogValid()) {
-            Message.debug("Constructing EntityEventHandler");
-        }
+        Message.debugv("Constructing EntityEventHandler");
+
         // Preventing duplications
-        if(Minecraft.getMinecraft().world != null)
+        if (Minecraft.getMinecraft().world != null)
             this.storedEntities.addAll(Minecraft.getMinecraft().world.getLoadedEntityList());
     }
 
@@ -45,23 +48,57 @@ public class EntityEventHandler {
     }
 
     private final Set<Entity> storedEntities = new LinkedHashSet<>();
+    private final Set<UUID> viewedEntities = new LinkedHashSet<>();
+
+    public Set<UUID> getViewedEntities() {
+        return ImmutableSet.copyOf(viewedEntities);
+    }
+
+    public Set<Entity> getStoredEntities() {
+        return ImmutableSet.copyOf(storedEntities);
+    }
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     @SubscribeEvent
     public void onEntityUpdate(EntityEvent.EntityConstructing event) {
         final Entity entity = event.getEntity();
-        if(storedEntities.contains(entity)) return;
-        // Processing items in this tab
-        if(Main.configuration.isLogging()) {
-            Message.debug("Found entity " + entity.getName());
+        if (storedEntities.contains(entity)) return;
+        if (viewedEntities.contains(entity.getUniqueID())) {
+            Message.debugv("Avoiding duplicated UUID " + entity.getUniqueID() + " from being counted.");
+            return;
         }
-        if(Minecraft.getMinecraft().world == null) return;
+        // Discarding tossed items
+        if (entity instanceof EntityItem) {
+            double entityY = entity.getPositionVector().y;
+            double mcY = Minecraft.getMinecraft().player.posY;
+
+            if (StrictMath.add(mcY, TOSS_MAGIC) == entityY) {
+                Message.debugv("Cancelled item " + entity.getName() + " due to dropped item detection");
+                storedEntities.add(entity);
+                viewedEntities.add(entity.getUniqueID());
+                return;
+            } else {
+                Message.debugv("Passed item " + entity.getName() + " for dropped item detection.");
+                Message.debugv("entityY, mcY = " + entityY + " " + mcY + "& Result=" + StrictMath.add(mcY, TOSS_MAGIC) + " comparing against " + entityY);
+            }
+        }
+        // Processing items in this tab
+
+        Message.debug("Found entity " + entity.getName());
+
+        if (Minecraft.getMinecraft().world == null) return;
 
         executor.schedule(() -> processEntity(entity), Main.configuration.getDelayMills(), TimeUnit.MILLISECONDS);
     }
 
     private void processEntity(Entity entity) {
         storedEntities.add(entity);
+        // False if unchanged, implying it already exists, but we already made sure this is not the case?
+        if(!viewedEntities.add(entity.getUniqueID())) {
+            Message.debugv("Avoiding duplicated UUID " + entity.getUniqueID() + " in EntityEventHandler#processEntity(Entity)");
+            Message.debugv("This is a strange behaviour. Please alert the mod developer if this becomes a recurring issue.");
+            return;
+        }
         if (entity instanceof EntityItem) {
             EntityItem entityItem = (EntityItem) entity;
             // Ignoring emerald for sake of our life
@@ -69,6 +106,7 @@ public class EntityEventHandler {
 
             String itemName = entityItem.serializeNBT().getCompoundTag("Item").getCompoundTag("tag").getCompoundTag("display").getString("Name");
             Rarity rarity = ItemDatabase.instance.getItemRarity(itemName);
+            // Old schooled way due to involving some huge ass component that I'm too lazy to change
             if(Main.configuration.isLogging() || Main.configuration.doLogValid()) {
                 ITextComponent itc = Message.builder("Processing item entity " + entity.getName()).build()
                         .setStyle(new Style().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,

@@ -1,4 +1,4 @@
-package com.spiritlight.mobkilltracker.v3.utils;
+package com.spiritlight.mobkilltracker.v3.utils.drops;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;

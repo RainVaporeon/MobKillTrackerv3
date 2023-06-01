@@ -2,12 +2,11 @@ package com.spiritlight.mobkilltracker.v3.command;
 
 import com.spiritlight.mobkilltracker.v3.Main;
 import com.spiritlight.mobkilltracker.v3.enums.Color;
-import com.spiritlight.mobkilltracker.v3.utils.DropManager;
-import com.spiritlight.mobkilltracker.v3.utils.DropStatistics;
+import com.spiritlight.mobkilltracker.v3.utils.drops.DropManager;
+import com.spiritlight.mobkilltracker.v3.utils.drops.DropStatistics;
 import com.spiritlight.mobkilltracker.v3.utils.Message;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.command.CommandBase;
-import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.client.IClientCommand;

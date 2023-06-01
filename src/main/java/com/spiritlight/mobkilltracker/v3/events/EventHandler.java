@@ -2,8 +2,8 @@ package com.spiritlight.mobkilltracker.v3.events;
 
 import com.spiritlight.mobkilltracker.v3.Main;
 import com.spiritlight.mobkilltracker.v3.core.DataHandler;
-import com.spiritlight.mobkilltracker.v3.utils.DropManager;
-import com.spiritlight.mobkilltracker.v3.utils.DropStatistics;
+import com.spiritlight.mobkilltracker.v3.utils.drops.DropManager;
+import com.spiritlight.mobkilltracker.v3.utils.drops.DropStatistics;
 import com.spiritlight.mobkilltracker.v3.utils.Message;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
@@ -25,10 +25,9 @@ public class EventHandler {
 
     @SubscribeEvent
     public void onTotemPlacement(TotemEvent event) {
-        if(Main.configuration.isLogging() || Main.configuration.doLogValid()) {
-            Message.debug("Caught TotemEvent");
-        }
-        if(DataHandler.isInProgress()) {
+        Message.debugv("Caught TotemEvent");
+
+        if (DataHandler.isInProgress()) {
             Message.warn("A totem is already in progress, ignoring this one...");
             return; // Ignore
         }
@@ -48,10 +47,9 @@ public class EventHandler {
     private static final DecimalFormat df = new DecimalFormat("0.00");
     @SubscribeEvent
     public void onCompletion(CompletionEvent event) {
-        if(Minecraft.getMinecraft().player == null) return;
-        if(Main.configuration.isLogging() || Main.configuration.doLogValid()) {
-            Message.debug("Caught CompletionEvent");
-        }
+        if (Minecraft.getMinecraft().player == null) return;
+        Message.debugv("Caught CompletionEvent");
+
         DropStatistics drops = event.getHandler().getStats();
         int totalDrops = drops.getQuantity(DropStatistics.ALL);
         int itemDrops = drops.getQuantity(DropStatistics.ITEM);
@@ -76,18 +74,15 @@ public class EventHandler {
                         "§rNormal §rDrops: " + drops.getNormal() + "\n" +
                         "Total drops: Item " + itemDrops + ", Ingredients " + ingDrops +
                         "\n §c§lAdvanced details:\n" +
-                                "§rItem Rate: " + df.format(itemRate) + " §7(Mobs/item)" + "\n" +
-                                "§rIngredient Rate: " + df.format(ingRate) + " §7(Mobs/Ingredient)" + "\n" +
-                                "§rRarity Index: " + drops.getRarityIndex()
+                        "§rItem Rate: " + df.format(itemRate) + " §7(Mobs/item)" + "\n" +
+                        "§rIngredient Rate: " + df.format(ingRate) + " §7(Mobs/Ingredient)" + "\n" +
+                        "§rRarity Index: " + drops.getRarityIndex()
         );
-
     }
 
     /* Logging Only */
     @SubscribeEvent
     public void termination(TerminationEvent event) {
-        if(Main.configuration.isLogging() || Main.configuration.doLogValid()) {
-            Message.debug("Caught TerminationEvent");
-        }
+        Message.debugv("Caught TerminationEvent");
     }
 }

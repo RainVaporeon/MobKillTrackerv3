@@ -3,11 +3,12 @@ package com.spiritlight.mobkilltracker.v3.core;
 import com.spiritlight.mobkilltracker.v3.Main;
 import com.spiritlight.mobkilltracker.v3.events.CompletionEvent;
 import com.spiritlight.mobkilltracker.v3.events.TerminationEvent;
-import com.spiritlight.mobkilltracker.v3.utils.DropStatistics;
+import com.spiritlight.mobkilltracker.v3.utils.drops.DropStatistics;
 import com.spiritlight.mobkilltracker.v3.utils.Message;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+import java.io.NotActiveException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -16,6 +17,7 @@ import java.util.function.Supplier;
 
 public class DataHandler {
     protected static boolean inProgress = false;
+    protected static DataHandler lastHandler = null;
 
     private final EntityEventHandler handler;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -24,8 +26,21 @@ public class DataHandler {
     private boolean isTerminated = false;
     private boolean isCompleted = false;
 
+    public static final DataHandler EMPTY;
+
+    static {
+        EMPTY = new DataHandler();
+        EMPTY.isTerminated = true;
+    }
+
     private DataHandler() {
         handler = new EntityEventHandler();
+        if(Main.configuration.doTrackLast())
+            lastHandler = this;
+    }
+
+    public static void invalidateLast() {
+        lastHandler = null;
     }
 
     public void start() {
@@ -33,9 +48,8 @@ public class DataHandler {
     }
 
     public void start(int duration) {
-        if(Main.configuration.isLogging() || Main.configuration.doLogValid()) {
-            Message.debug("DataHandler started with set duration " + duration);
-        }
+        Message.debugv("DataHandler started with set duration " + duration);
+
         inProgress = true;
         MinecraftForge.EVENT_BUS.register(handler);
         scheduler.schedule(this::stop, duration, TimeUnit.SECONDS);
@@ -94,20 +108,29 @@ public class DataHandler {
     }
 
     protected void completion() {
-        if(Main.configuration.isLogging()) {
-            Message.debug("DataHandler logging finished: " + this);
-        }
+
+        Message.debugv("DataHandler logging finished: " + this);
+
         MinecraftForge.EVENT_BUS.unregister(handler);
         this.scheduler.shutdownNow();
         inProgress = false;
-        if(terminationAction != null && isTerminated) {
+        if (terminationAction != null && isTerminated) {
             isCompleted = true;
-            if(terminationAction.get()) return;
+            if (terminationAction.get()) return;
         }
-        if(completionAction != null) completionAction.accept(handler.getStats());
+        if (completionAction != null) completionAction.accept(handler.getStats());
         // unregister and post so the termination handler is not called twice
         MinecraftForge.EVENT_BUS.post(new CompletionEvent(this));
         isCompleted = true;
+    }
+
+    public boolean isActive() {
+        if(isCompleted || isTerminated) return false;
+        return inProgress;
+    }
+
+    public EntityEventHandler getHandler() {
+        return handler;
     }
 
     public static DataHandler newHandler() {
@@ -116,6 +139,18 @@ public class DataHandler {
 
     public static DataHandler newListenedHandler() {
         return new ListenerHandler();
+    }
+
+    /**
+     *
+     * @return The last data handler (including the currently active one, if any)
+     * @throws NotActiveException If tracking last is not enabled
+     */
+    public static DataHandler getLastHandler() throws NotActiveException {
+        if(Main.configuration.doTrackLast()) {
+            throw new NotActiveException();
+        }
+        return lastHandler;
     }
 
     public static class ListenerHandler extends DataHandler {

@@ -9,9 +9,7 @@ public class CompletionEvent extends Event {
     private final DataHandler handler;
 
     public CompletionEvent(DataHandler handler) {
-        if(Main.configuration.isLogging()) {
-            Message.debug("Constructing CompletionEvent for DataHandler " + handler);
-        }
+        Message.debugv("Constructing CompletionEvent for DataHandler " + handler);
         this.handler = handler;
     }
 

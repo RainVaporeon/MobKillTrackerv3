@@ -36,6 +36,9 @@ public class Config {
     @SessionOnly // Logging, but only valid stuffs
     private boolean logValid = false;
 
+    @SessionOnly // Tracking last DataHandler, false = does not keep track at all
+    private boolean trackLast = false;
+
     private int delayMills = 100;
 
     public int getDelayMills() {
@@ -68,6 +71,14 @@ public class Config {
 
     public void setLogValid(boolean logValid) {
         this.logValid = logValid;
+    }
+
+    public boolean doTrackLast() {
+        return trackLast;
+    }
+
+    public void setTrackLast(boolean trackLast) {
+        this.trackLast = trackLast;
     }
 
     public void save() throws IOException {

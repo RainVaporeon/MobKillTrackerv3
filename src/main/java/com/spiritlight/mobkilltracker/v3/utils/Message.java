@@ -1,6 +1,8 @@
 package com.spiritlight.mobkilltracker.v3.utils;
 
+import com.spiritlight.mobkilltracker.v3.Main;
 import com.spiritlight.mobkilltracker.v3.enums.Color;
+import com.spiritlight.mobkilltracker.v3.events.ExecutionEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
@@ -8,6 +10,7 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.util.text.event.HoverEvent;
+import net.minecraftforge.common.MinecraftForge;
 
 public class Message {
     public static final String TITLE = Color.GOLD + "[" + Color.GREEN + "MKT " + Color.YELLOW + "v3" + Color.GOLD + "] " + Color.RESET;
@@ -29,7 +32,13 @@ public class Message {
     }
 
     public static void debug(String s) {
-        send(s, Color.MAGENTA);
+        if(Main.configuration.isLogging())
+            send(s, Color.MAGENTA);
+    }
+
+    public static void debugv(String s) {
+        if(Main.configuration.doLogValid() || Main.configuration.isLogging())
+            send(s, Color.MAGENTA);
     }
 
     public static void send(String s) {
@@ -68,7 +77,7 @@ public class Message {
 
     private static void send0(ITextComponent content) {
         if(Minecraft.getMinecraft().player == null) return;
-        Minecraft.getMinecraft().player.sendMessage(content);
+        MinecraftForge.EVENT_BUS.post(new ExecutionEvent(Main.class, () -> Minecraft.getMinecraft().player.sendMessage(content)));
     }
 
     public static Builder builder() {
