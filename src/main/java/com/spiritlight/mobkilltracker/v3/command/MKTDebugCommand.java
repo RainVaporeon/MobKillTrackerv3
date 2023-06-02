@@ -2,9 +2,10 @@ package com.spiritlight.mobkilltracker.v3.command;
 
 import com.spiritlight.mobkilltracker.v3.Main;
 import com.spiritlight.mobkilltracker.v3.core.DataHandler;
+import com.spiritlight.mobkilltracker.v3.core.EntityEventHandler;
 import com.spiritlight.mobkilltracker.v3.events.TerminationEvent;
 import com.spiritlight.mobkilltracker.v3.utils.ItemDatabase;
-import com.spiritlight.mobkilltracker.v3.utils.Message;
+import com.spiritlight.mobkilltracker.v3.utils.minecraft.Message;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
@@ -20,7 +21,6 @@ import net.minecraftforge.client.IClientCommand;
 import net.minecraftforge.common.MinecraftForge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.io.NotActiveException;
 import java.util.List;
 import java.util.Locale;
 
@@ -92,14 +92,7 @@ public class MKTDebugCommand extends CommandBase implements IClientCommand {
                 Message.info("OK");
                 return;
             case "dumpviewed":
-                DataHandler handler;
-                try {
-                    handler = DataHandler.getLastHandler();
-                } catch (NotActiveException nae) {
-                    Message.warn("Not Active");
-                    return;
-                }
-                Message.send(handler.getHandler().getViewedEntities().toString());
+                Message.send(EntityEventHandler.getViewedEntities().toString());
                 Message.info("OK");
                 return;
             case "save":

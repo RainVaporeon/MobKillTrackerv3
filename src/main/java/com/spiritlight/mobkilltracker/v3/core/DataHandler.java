@@ -4,7 +4,7 @@ import com.spiritlight.mobkilltracker.v3.Main;
 import com.spiritlight.mobkilltracker.v3.events.CompletionEvent;
 import com.spiritlight.mobkilltracker.v3.events.TerminationEvent;
 import com.spiritlight.mobkilltracker.v3.utils.drops.DropStatistics;
-import com.spiritlight.mobkilltracker.v3.utils.Message;
+import com.spiritlight.mobkilltracker.v3.utils.minecraft.Message;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 

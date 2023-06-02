@@ -6,7 +6,9 @@ import com.spiritlight.mobkilltracker.v3.enums.Color;
 import com.spiritlight.mobkilltracker.v3.enums.Rarity;
 import com.spiritlight.mobkilltracker.v3.enums.Tier;
 import com.spiritlight.mobkilltracker.v3.utils.ItemDatabase;
-import com.spiritlight.mobkilltracker.v3.utils.Message;
+import com.spiritlight.mobkilltracker.v3.utils.minecraft.Message;
+import com.spiritlight.mobkilltracker.v3.utils.minecraft.NBTType;
+import com.spiritlight.mobkilltracker.v3.utils.collections.ConcurrentTimedSet;
 import com.spiritlight.mobkilltracker.v3.utils.drops.DropStatistics;
 import com.spiritlight.mobkilltracker.v3.utils.math.StrictMath;
 import net.minecraft.client.Minecraft;
@@ -34,6 +36,7 @@ import static com.spiritlight.mobkilltracker.v3.utils.SharedConstants.TOSS_MAGIC
 public class EntityEventHandler {
     private final DropStatistics stats = new DropStatistics();
 
+    private static final Set<UUID> viewedEntities = new ConcurrentTimedSet<>(300, TimeUnit.SECONDS);
 
     public EntityEventHandler() {
         Message.debugv("Constructing EntityEventHandler");
@@ -48,14 +51,9 @@ public class EntityEventHandler {
     }
 
     private final Set<Entity> storedEntities = new LinkedHashSet<>();
-    private final Set<UUID> viewedEntities = new LinkedHashSet<>();
 
-    public Set<UUID> getViewedEntities() {
+    public static Set<UUID> getViewedEntities() {
         return ImmutableSet.copyOf(viewedEntities);
-    }
-
-    public Set<Entity> getStoredEntities() {
-        return ImmutableSet.copyOf(storedEntities);
     }
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -67,21 +65,6 @@ public class EntityEventHandler {
             Message.debugv("Avoiding duplicated UUID " + entity.getUniqueID() + " from being counted.");
             return;
         }
-        // Discarding tossed items
-        if (entity instanceof EntityItem) {
-            double entityY = entity.getPositionVector().y;
-            double mcY = Minecraft.getMinecraft().player.posY;
-
-            if (StrictMath.add(mcY, TOSS_MAGIC) == entityY) {
-                Message.debugv("Cancelled item " + entity.getName() + " due to dropped item detection");
-                storedEntities.add(entity);
-                viewedEntities.add(entity.getUniqueID());
-                return;
-            } else {
-                Message.debugv("Passed item " + entity.getName() + " for dropped item detection.");
-                Message.debugv("entityY, mcY = " + entityY + " " + mcY + "& Result=" + StrictMath.add(mcY, TOSS_MAGIC) + " comparing against " + entityY);
-            }
-        }
         // Processing items in this tab
 
         Message.debug("Found entity " + entity.getName());
@@ -89,6 +72,20 @@ public class EntityEventHandler {
         if (Minecraft.getMinecraft().world == null) return;
 
         executor.schedule(() -> processEntity(entity), Main.configuration.getDelayMills(), TimeUnit.MILLISECONDS);
+    }
+
+    private boolean processToss(EntityItem entity) {
+        double entityY = entity.posY;
+        double mcY = Minecraft.getMinecraft().player.posY;
+
+        if (StrictMath.add(mcY, TOSS_MAGIC) == entityY) {
+            Message.debugv("Cancelled item " + entity.getName() + " due to dropped item detection");
+            storedEntities.add(entity);
+            viewedEntities.add(entity.getUniqueID());
+            return true;
+        } else {
+          return false;
+        }
     }
 
     private void processEntity(Entity entity) {
@@ -115,6 +112,7 @@ public class EntityEventHandler {
                                 entity.getPosition().getX() + " " + entity.getPosition().getY() + " " + entity.getPosition().getZ())));
                 Message.sendRaw(itc);
             }
+            if(processToss(entityItem)) return;
             if(rarity != Rarity.UNKNOWN) {
                 manageRarity(rarity);
             } else {
@@ -151,6 +149,26 @@ public class EntityEventHandler {
                 stats.addUnique(); break;
             case NORMAL:
                 stats.addNormal(); break;
+            case UNKNOWN:
+        }
+    }
+
+    private void removeRarity(Rarity rarity) {
+        switch(rarity) {
+            case MYTHIC:
+                stats.removeMythic(); break;
+            case FABLED:
+                stats.removeFabled(); break;
+            case LEGENDARY:
+                stats.removeLegendary(); break;
+            case RARE:
+                stats.removeRare(); break;
+            case SET:
+                stats.removeSet(); break;
+            case UNIQUE:
+                stats.removeUnique(); break;
+            case NORMAL:
+                stats.removeNormal(); break;
             case UNKNOWN:
         }
     }

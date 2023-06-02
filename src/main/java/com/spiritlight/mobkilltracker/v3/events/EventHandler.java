@@ -4,7 +4,7 @@ import com.spiritlight.mobkilltracker.v3.Main;
 import com.spiritlight.mobkilltracker.v3.core.DataHandler;
 import com.spiritlight.mobkilltracker.v3.utils.drops.DropManager;
 import com.spiritlight.mobkilltracker.v3.utils.drops.DropStatistics;
-import com.spiritlight.mobkilltracker.v3.utils.Message;
+import com.spiritlight.mobkilltracker.v3.utils.minecraft.Message;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.MinecraftForge;

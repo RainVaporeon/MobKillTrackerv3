@@ -187,6 +187,80 @@ public class DropStatistics {
         }
     }
 
+    @Synchronized
+    public void removeKill() {
+        synchronized (lock) {
+            kills--;
+        }
+    }
+
+    @Synchronized
+    public void removeMythic() {
+        synchronized (lock) {
+            mythic--;
+        }
+    }
+
+    @Synchronized
+    public void removeFabled() {
+        synchronized (lock) {
+            fabled--;
+        }
+    }
+
+    @Synchronized
+    public void removeLegendary() {
+        synchronized (lock) {
+            legendary--;
+        }
+    }
+
+    @Synchronized
+    public void removeRare() {
+        synchronized (lock) {
+            rare--;
+        }
+    }
+
+    @Synchronized
+    public void removeSet() {
+        synchronized (lock) {
+            set--;
+        }
+    }
+
+    @Synchronized
+    public void removeUnique() {
+        synchronized (lock) {
+            unique--;
+        }
+    }
+
+    @Synchronized
+    public void removeNormal() {
+        synchronized (lock) {
+            normal--;
+        }
+    }
+
+    @Synchronized
+    public void removeTier(Tier tier) {
+        synchronized (lock) {
+            switch (tier) {
+                case THREE:
+                    ingredient3--; break;
+                case TWO:
+                    ingredient2--; break;
+                case ONE:
+                    ingredient1--; break;
+                case ZERO:
+                    ingredient0--; break;
+                case UNKNOWN:
+                    System.out.println("Found unknown rarity");
+            }
+        }
+    }
+
     public int getKills() {
         return kills;
     }

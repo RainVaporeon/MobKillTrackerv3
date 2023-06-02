@@ -1,7 +1,7 @@
 package com.spiritlight.mobkilltracker.v3.utils.drops;
 
 import com.google.gson.JsonArray;
-import com.spiritlight.mobkilltracker.v3.utils.Message;
+import com.spiritlight.mobkilltracker.v3.utils.minecraft.Message;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

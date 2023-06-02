@@ -4,7 +4,7 @@ import com.spiritlight.mobkilltracker.v3.Main;
 import com.spiritlight.mobkilltracker.v3.enums.Color;
 import com.spiritlight.mobkilltracker.v3.utils.drops.DropManager;
 import com.spiritlight.mobkilltracker.v3.utils.drops.DropStatistics;
-import com.spiritlight.mobkilltracker.v3.utils.Message;
+import com.spiritlight.mobkilltracker.v3.utils.minecraft.Message;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;

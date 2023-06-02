@@ -2,7 +2,6 @@ package com.spiritlight.mobkilltracker.v3.config;
 
 import com.google.gson.*;
 import com.google.gson.stream.JsonWriter;
-import com.spiritlight.mobkilltracker.v3.utils.ConfigObject;
 
 import java.io.File;
 import java.io.FileWriter;

@@ -1,4 +1,4 @@
-package com.spiritlight.mobkilltracker.v3.utils;
+package com.spiritlight.mobkilltracker.v3.utils.minecraft;
 
 import com.spiritlight.mobkilltracker.v3.Main;
 import com.spiritlight.mobkilltracker.v3.enums.Color;
@@ -113,6 +113,13 @@ public class Message {
         public Builder addHoverEvent(HoverEvent.Action action, ITextComponent value) {
             this.component.setStyle(component.getStyle().setHoverEvent(new HoverEvent(
                     action, value
+            )));
+            return this;
+        }
+
+        public Builder addHoverEvent(HoverEvent.Action action, String value) {
+            this.component.setStyle(component.getStyle().setHoverEvent(new HoverEvent(
+                    action, new TextComponentString(value)
             )));
             return this;
         }

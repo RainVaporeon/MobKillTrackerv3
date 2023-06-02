@@ -1,4 +1,4 @@
-package com.spiritlight.mobkilltracker.v3.utils;
+package com.spiritlight.mobkilltracker.v3.config;
 
 /**
  * Declares a config object.
