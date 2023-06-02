@@ -14,19 +14,18 @@ import com.spiritlight.mobkilltracker.v3.utils.math.StrictMath;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.util.text.event.HoverEvent;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-import java.util.LinkedHashSet;
-import java.util.Locale;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -76,16 +75,18 @@ public class EntityEventHandler {
 
     private boolean processToss(EntityItem entity) {
         double entityY = entity.posY;
-        double mcY = Minecraft.getMinecraft().player.posY;
-
-        if (StrictMath.add(mcY, TOSS_MAGIC) == entityY) {
-            Message.debugv("Cancelled item " + entity.getName() + " due to dropped item detection");
-            storedEntities.add(entity);
-            viewedEntities.add(entity.getUniqueID());
-            return true;
-        } else {
-          return false;
+        List<EntityPlayer> player = new LinkedList<>(Minecraft.getMinecraft().world.playerEntities);
+        player.removeIf(p -> p instanceof FakePlayer || p.isDead);
+        double[] yAxis = player.stream().mapToDouble(p -> p.posY).toArray();
+        for(double playerY : yAxis) {
+            if(StrictMath.add(playerY, TOSS_MAGIC) == entityY) {
+                Message.debugv("Cancelled item " + entity.getName() + " due to dropped item detection");
+                storedEntities.add(entity);
+                viewedEntities.add(entity.getUniqueID());
+                return true;
+            }
         }
+        return false;
     }
 
     private void processEntity(Entity entity) {
