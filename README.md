@@ -9,6 +9,8 @@ All of these are unconfirmed but is thought to be done:
 - More arranged and clean-ish code
 - Less spaghetti and processing used
 - Less laggy detections
+- Now removes duplicated item on reloading
+- Detects toss relatively properly now (with /mktd delay 0)
 
 ## Notice
 

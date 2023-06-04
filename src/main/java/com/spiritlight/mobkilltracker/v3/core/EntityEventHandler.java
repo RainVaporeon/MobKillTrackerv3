@@ -1,5 +1,6 @@
 package com.spiritlight.mobkilltracker.v3.core;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.spiritlight.mobkilltracker.v3.Main;
 import com.spiritlight.mobkilltracker.v3.enums.Color;
@@ -34,6 +35,8 @@ import static com.spiritlight.mobkilltracker.v3.utils.SharedConstants.TOSS_MAGIC
 
 public class EntityEventHandler {
     private final DropStatistics stats = new DropStatistics();
+
+    private static final List<String> KILL_INDICATOR = ImmutableList.of("combat xp", "guild xp", "shared");
 
     private static final Set<UUID> viewedEntities = new ConcurrentTimedSet<>(300, TimeUnit.SECONDS);
 
@@ -123,7 +126,7 @@ public class EntityEventHandler {
             }
         } else {
             // Process entities here
-            if(entity.getName().toLowerCase(Locale.ROOT).contains("combat xp")) {
+            if(KILL_INDICATOR.stream().anyMatch(str -> entity.getName().toLowerCase(Locale.ROOT).contains(str))) {
                 if(Main.configuration.doLogValid()) {
                     ITextComponent component = Message.builder(Color.MAGENTA + "Processing kill " + entity.getName()).addHoverEvent(HoverEvent.Action.SHOW_TEXT,
                             Message.of(Message.formatJson(String.valueOf(entity.serializeNBT())))).build();

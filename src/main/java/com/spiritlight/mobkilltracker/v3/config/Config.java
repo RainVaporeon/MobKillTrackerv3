@@ -38,7 +38,7 @@ public class Config {
     @SessionOnly // Tracking last DataHandler, false = does not keep track at all
     private boolean trackLast = false;
 
-    private int delayMills = 100;
+    private int delayMills = 0;
 
     public int getDelayMills() {
         return delayMills;
@@ -127,21 +127,29 @@ public class Config {
                 if(Modifier.isStatic(f.getModifiers())) continue;
                 String name = f.getName();
                 Class<?> type = f.getType();
-                if(!jsonObject.has(name)) {
-                    System.out.println("Cannot find property " + name + ", skipping");
+                JsonElement element = jsonObject.get(name);
+                if(element == null && f.isAnnotationPresent(LegacyField.class)) {
+                    String[] previousNames = f.getAnnotation(LegacyField.class).value();
+                    for(String s : previousNames) {
+                        element = jsonObject.get(s);
+                        if(element != null) break;
+                    }
+                }
+                if(element == null) {
+                    System.err.println("Cannot find property " + name + ", skipping");
                     continue;
                 }
                 if(type == String.class) {
-                    f.set(jsonObject.get(name).getAsString(), this);
+                    f.set(element.getAsString(), this);
                 } else if (type == boolean.class) {
-                    f.setBoolean(this, jsonObject.get(name).getAsBoolean());
+                    f.setBoolean(this, element.getAsBoolean());
                 } else if (type == double.class) {
-                    f.setDouble(this, jsonObject.get(name).getAsDouble());
+                    f.setDouble(this, element.getAsDouble());
                 } else if (type == int.class) {
-                    f.setInt(this, jsonObject.get(name).getAsInt());
+                    f.setInt(this, element.getAsInt());
                 } else if (ConfigObject.class.isAssignableFrom(type)) {
                     try {
-                        ConfigObject<?> cfg = ((ConfigObject<?>) type.newInstance()).deserialize(jsonObject.get(name).getAsString());
+                        ConfigObject<?> cfg = ((ConfigObject<?>) type.newInstance()).deserialize(element.getAsString());
                         f.set(cfg, this);
                     } catch (Exception e) {
                         throw new JsonParseException("Cannot find suitable type for name " + name + " with type " + type, e);
