@@ -21,6 +21,14 @@ import java.nio.file.Files;
  *     an instance of {@link ConfigObject} will also be ignored during
  *     serialization/deserialization process.
  * </p>
+ *
+ * @apiNote Any fields that are either {@code static}, {@code transient} or {@code final} will
+ * be ignored during serializing/deserializing process.
+ * <p>
+ *     Alternatively, annotate with {@link ConfigIgnore} for the configuration to ignore it,
+ *     and {@link SessionOnly} to indicate that this field is for session only and should not
+ *     be saved. Finally, annotate with {@link LegacyField} for backwards compatibility if required.
+ * </p>
  */
 public class Config {
     @ConfigIgnore
@@ -91,6 +99,7 @@ public class Config {
                 // Ignore static fields
                 if(Modifier.isStatic(f.getModifiers())) continue;
                 if(Modifier.isFinal(f.getModifiers())) continue;
+                if(Modifier.isTransient(f.getModifiers())) continue;
                 String name = f.getName();
                 Object value = f.get(this);
 
@@ -125,6 +134,7 @@ public class Config {
                 if(f.isAnnotationPresent(SessionOnly.class) || f.isAnnotationPresent(ConfigIgnore.class)) continue;
                 if(Modifier.isFinal(f.getModifiers())) continue;
                 if(Modifier.isStatic(f.getModifiers())) continue;
+                if(Modifier.isTransient(f.getModifiers())) continue;
                 String name = f.getName();
                 Class<?> type = f.getType();
                 JsonElement element = jsonObject.get(name);
@@ -132,11 +142,14 @@ public class Config {
                     String[] previousNames = f.getAnnotation(LegacyField.class).value();
                     for(String s : previousNames) {
                         element = jsonObject.get(s);
-                        if(element != null) break;
+                        if(element != null) {
+                            System.out.println("Found defined legacy property " + s + " for given field " + name);
+                            break;
+                        }
                     }
                 }
                 if(element == null) {
-                    System.err.println("Cannot find property " + name + ", skipping");
+                    System.err.println("Cannot find defined property " + name + ", skipping");
                     continue;
                 }
                 if(type == String.class) {

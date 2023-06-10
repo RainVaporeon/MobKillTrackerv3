@@ -6,6 +6,7 @@ import com.spiritlight.mobkilltracker.v3.Main;
 import com.spiritlight.mobkilltracker.v3.enums.Color;
 import com.spiritlight.mobkilltracker.v3.enums.Rarity;
 import com.spiritlight.mobkilltracker.v3.enums.Tier;
+import com.spiritlight.mobkilltracker.v3.enums.Type;
 import com.spiritlight.mobkilltracker.v3.utils.ItemDatabase;
 import com.spiritlight.mobkilltracker.v3.utils.minecraft.Message;
 import com.spiritlight.mobkilltracker.v3.utils.minecraft.NBTType;
@@ -62,6 +63,7 @@ public class EntityEventHandler {
     @SubscribeEvent
     public void onEntityUpdate(EntityEvent.EntityConstructing event) {
         final Entity entity = event.getEntity();
+        if (entity == null) return; // EDGE-CASE
         if (storedEntities.contains(entity)) return;
         if (viewedEntities.contains(entity.getUniqueID())) {
             Message.debugv("Avoiding duplicated UUID " + entity.getUniqueID() + " from being counted.");
@@ -77,10 +79,14 @@ public class EntityEventHandler {
     }
 
     private boolean processToss(EntityItem entity) {
+
+        if(Main.configuration.getDelayMills() != 0) return false;
+
         double entityY = entity.posY;
-        List<EntityPlayer> player = new LinkedList<>(Minecraft.getMinecraft().world.playerEntities);
-        player.removeIf(p -> p instanceof FakePlayer || p.isDead);
-        double[] yAxis = player.stream().mapToDouble(p -> p.posY).toArray();
+        List<EntityPlayer> player = Minecraft.getMinecraft().world.playerEntities;
+        double[] yAxis = player.stream()
+                .filter(p -> !(p instanceof FakePlayer))
+                .filter(p -> !p.isDead).mapToDouble(p -> p.posY).toArray();
         for(double playerY : yAxis) {
             if(StrictMath.add(playerY, TOSS_MAGIC) == entityY) {
                 Message.debugv("Cancelled item " + entity.getName() + " due to dropped item detection");
@@ -94,6 +100,7 @@ public class EntityEventHandler {
 
     private void processEntity(Entity entity) {
         storedEntities.add(entity);
+        if(entity == null) return;
         // False if unchanged, implying it already exists, but we already made sure this is not the case?
         if(!viewedEntities.add(entity.getUniqueID())) {
             Message.debugv("Avoiding duplicated UUID " + entity.getUniqueID() + " in EntityEventHandler#processEntity(Entity)");
@@ -106,7 +113,11 @@ public class EntityEventHandler {
             if(Items.EMERALD.equals(entityItem.getItem().getItem())) return;
 
             String itemName = entityItem.serializeNBT().getCompoundTag("Item").getCompoundTag("tag").getCompoundTag("display").getString("Name");
-            Rarity rarity = ItemDatabase.instance.getItemRarity(itemName);
+
+            Type type = ItemDatabase.instance.getItemType(itemName);
+
+            if(type == Type.UNKNOWN) return;
+
             // Old schooled way due to involving some huge ass component that I'm too lazy to change
             if(Main.configuration.isLogging() || Main.configuration.doLogValid()) {
                 ITextComponent itc = Message.builder("Processing item entity " + entity.getName()).build()
@@ -117,12 +128,11 @@ public class EntityEventHandler {
                 Message.sendRaw(itc);
             }
             if(processToss(entityItem)) return;
-            if(rarity != Rarity.UNKNOWN) {
-                manageRarity(rarity);
-            } else {
-                // This line is only reached if no item was fetched
-                Tier tier = ItemDatabase.instance.getIngredientTier(itemName);
-                stats.addTier(tier);
+            switch(type) {
+                case ITEM:
+                    this.manageRarity(ItemDatabase.instance.getItemRarity(itemName)); break;
+                case INGREDIENT:
+                    this.stats.addTier(ItemDatabase.instance.getIngredientTier(itemName)); break;
             }
         } else {
             // Process entities here
@@ -154,6 +164,7 @@ public class EntityEventHandler {
             case NORMAL:
                 stats.addNormal(); break;
             case UNKNOWN:
+                System.err.println("Found unknown rarity!");
         }
     }
 

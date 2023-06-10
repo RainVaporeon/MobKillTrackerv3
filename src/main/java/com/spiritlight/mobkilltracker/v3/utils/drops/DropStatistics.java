@@ -92,6 +92,10 @@ public class DropStatistics {
 
     @Override
     public String toString() {
+        return this.toJson().toString();
+    }
+
+    public JsonElement toJson() {
         JsonObject object = new JsonObject();
         object.addProperty("mythic", mythic);
         object.addProperty("fabled", fabled);
@@ -106,11 +110,7 @@ public class DropStatistics {
         object.addProperty("ingredient0", ingredient0);
         object.addProperty("kills", kills);
         object.addProperty("note", note);
-        return object.toString();
-    }
-
-    public JsonElement toJson() {
-        return new Gson().fromJson(this.toString(), JsonObject.class);
+        return object;
     }
 
     @Synchronized
@@ -256,7 +256,7 @@ public class DropStatistics {
                 case ZERO:
                     ingredient0--; break;
                 case UNKNOWN:
-                    System.out.println("Found unknown rarity");
+                    System.out.println("Found unknown tier");
             }
         }
     }

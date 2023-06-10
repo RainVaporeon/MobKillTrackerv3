@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.spiritlight.mobkilltracker.v3.enums.Rarity;
 import com.spiritlight.mobkilltracker.v3.enums.Tier;
+import com.spiritlight.mobkilltracker.v3.enums.Type;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
@@ -15,6 +16,12 @@ public class ItemDatabase {
 
     private final Map<String, Rarity> itemMap = new HashMap<>();
     private final Map<String, Tier> ingredientMap = new HashMap<>();
+
+    public Type getItemType(String item) {
+        if(itemMap.containsKey(item)) return Type.ITEM;
+        if(ingredientMap.containsKey(item)) return Type.INGREDIENT;
+        return Type.UNKNOWN;
+    }
 
     @Nonnull
     public Rarity getItemRarity(String item) {
