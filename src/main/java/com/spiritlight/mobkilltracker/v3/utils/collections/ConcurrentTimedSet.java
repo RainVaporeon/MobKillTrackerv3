@@ -26,18 +26,24 @@ public class ConcurrentTimedSet<E> extends AbstractSet<E> {
     @Override
     public boolean add(E e) {
         ObjectDescriptor<E> element = new ObjectDescriptor<>(e, unit.toMillis(delay));
-        return map.put(e, element) == null;
+        return this.isEmpty(map.put(e, element));
     }
 
     @Override
     public boolean remove(Object o) {
-        return map.remove(o) == null;
+        return this.isEmpty(map.remove(o) == null);
+    }
+
+    private boolean isEmpty(Object o) {
+        if(o instanceof ObjectDescriptor) {
+            return ((ObjectDescriptor<?>) o).expired();
+        }
+        return o == null;
     }
 
     @Override
     public boolean contains(Object o) {
-        ObjectDescriptor<E> od = map.get(o);
-        if(od == null) return false;
+        ObjectDescriptor<E> od = map.getOrDefault(o, EMPTY);
         if(od.expired()) {
             map.remove(o);
             return false;
@@ -59,6 +65,10 @@ public class ConcurrentTimedSet<E> extends AbstractSet<E> {
         return (int) map.keySet().stream().filter(e -> !expired(e)).count();
     }
 
+    @Override
+    public String toString() {
+        return map.toString();
+    }
 
     private static class ObjectDescriptor<E> {
         private final long age;
@@ -80,6 +90,11 @@ public class ConcurrentTimedSet<E> extends AbstractSet<E> {
 
         public boolean expired() {
             return System.currentTimeMillis() > age;
+        }
+
+        @Override
+        public String toString() {
+            return "ObjectDescriptor{element=" + element.toString() + ",time=" + age + ",expired=" + this.expired() + "}";
         }
     }
 }

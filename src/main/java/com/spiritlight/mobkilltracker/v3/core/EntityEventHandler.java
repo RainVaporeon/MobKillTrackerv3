@@ -28,6 +28,7 @@ import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -59,7 +60,7 @@ public class EntityEventHandler {
         return ImmutableSet.copyOf(viewedEntities);
     }
 
-    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(16);
     @SubscribeEvent
     public void onEntityUpdate(EntityEvent.EntityConstructing event) {
         final Entity entity = event.getEntity();
@@ -75,7 +76,11 @@ public class EntityEventHandler {
 
         if (Minecraft.getMinecraft().world == null) return;
 
-        executor.schedule(() -> processEntity(entity), Main.configuration.getDelayMills(), TimeUnit.MILLISECONDS);
+        if(Main.configuration.getDelayMills() == 0) {
+            CompletableFuture.runAsync(() -> this.processEntity(entity));
+        } else {
+            executor.schedule(() -> processEntity(entity), Main.configuration.getDelayMills(), TimeUnit.MILLISECONDS);
+        }
     }
 
     private boolean processToss(EntityItem entity) {
